@@ -1,17 +1,5 @@
 # My Love for the San Francisco Giants
 
-#### Disclaimer
-
-Hey there, before we dive into the code, I want to make something clear - this is just a simple program I made to scratch an itch. I know there are other more elegant and visually-pleasing ways to get baseball stats, but I just wanted to have some fun and share it with fellow baseball fans.
-
-That being said, I welcome any feedback or suggestions you may have for how to improve this program or make it more useful for baseball fans. But above all, let's remember to be nice! We're all here because we love baseball and want to share that love with others.
-
-So if you have any comments or critiques, please share them respectfully and constructively. Let's keep the spirit of the game alive and well in everything we do.
-
-And of course, if you find any bugs or issues with the program, please let me know so I can fix them.
-
-So with that out of the way, let's dive into the code and see what kind of baseball stats we can scrape up!
-
 Hello there, fellow baseball fans! Are you ready to hear all about my love for the San Francisco Giants?
 
 The Giants are a team with a rich history, devoted fans, and a winning spirit. As a software factory chief engineer at Booz Allen Hamilton, I appreciate the dedication and precision that the Giants bring to the field.
@@ -23,6 +11,18 @@ So why am I telling you all this? Well, I just want to share my love for the Gia
 And hey, if you're ever in San Francisco and want to catch a Giants game with me, just hit me up. I'm always down for some good old-fashioned baseball and camaraderie. Let's go Giants!
 
 ## A Giant's Code Tour
+
+## Disclaimer
+
+Hey there, before we dive into the code, I want to make something clear - this is just a simple program I made to scratch an itch. I know there are other more elegant and visually-pleasing ways to get baseball stats, but I just wanted to have some fun and share it with fellow baseball fans.
+
+That being said, I welcome any feedback or suggestions you may have for how to improve this program or make it more useful for baseball fans. But above all, let's remember to be nice! We're all here because we love baseball and want to share that love with others.
+
+So if you have any comments or critiques, please share them respectfully and constructively. Let's keep the spirit of the game alive and well in everything we do.
+
+And of course, if you find any bugs or issues with the program, please let me know so I can fix them.
+
+So with that out of the way, let's dive into the code and see what kind of baseball stats we can scrape up!
 
 This code is a Go program that prompts the user to enter a Major League Baseball team's abbreviation (e.g. SF for San Francisco Giants), then uses web scraping techniques to fetch and parse the team's 2022 season batting statistics from Baseball Reference. The program then outputs the table headers and the team's stats for the 2022 season to the console.
 
