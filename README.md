@@ -1,4 +1,4 @@
-# My Love for the San Francisco Giants
+# ![My Love for the San Francisco Giants](/images/my-picture.jpg)
 
 Hello there, fellow baseball fans! Are you ready to hear all about my love for the San Francisco Giants?
 
