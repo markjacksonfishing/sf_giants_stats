@@ -36,7 +36,7 @@ func main() {
 
 The main function simply calls the run function with standard input and output as the input and output parameters.
 
-    ```go
+```go
     func run(input io.Reader, output io.Writer) {
 	reader := bufio.NewReader(input)
 
@@ -90,6 +90,7 @@ The main function simply calls the run function with standard input and output a
 	}
 }
 ```
+
 The run function takes an input and output parameter which allow for testing and customization of the input and output. It first prompts the user to enter a team abbreviation and then constructs a URL based on the entered abbreviation. The URL is used to make an HTTP request to Baseball Reference, and the HTML response is parsed using the goquery package.
 
 The program then searches the HTML for a table with the ID team_batting, and extracts the table headers and rows. It stores the headers in a slice of strings called headers, and the rows in a slice of slices of strings called rows.
