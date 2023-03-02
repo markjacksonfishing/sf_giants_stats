@@ -46,7 +46,7 @@ Overall, linear regression is a powerful tool that can be used to make predictio
 
 Kaplan, J. T., & Bornn, L. (2014). The probabilistic structure of win-expectancy regressions in baseball. Journal of the American Statistical Association, 109(505), 1545-1556. doi: 10.1080/01621459.2014.882669
 
-Keri, J., & Duquette, J. (2014). The bad news bears: Playoff probabilities for the MLB's struggling franchises. Retrieved from http://grantland.com/features/the-bad-news-bears-playoff-probabilities-for-the-mlbs-struggling-franchises/
+Keri, J., & Duquette, J. (2014). The bad news bears: Playoff probabilities for the MLB's struggling franchises. Grantland. Retrieved from http://grantland.com/features/the-bad-news-bears-playoff-probabilities-for-the-mlbs-struggling-franchises/
 
 Miller, N. J., Siegmund, D., & Maxim, L. D. (2015). Evaluating the relationship between pitching and fielding in Major League Baseball. Journal of Quantitative Analysis in Sports, 11(1), 1-12. doi: 10.1515/jqas-2014-0053
 
