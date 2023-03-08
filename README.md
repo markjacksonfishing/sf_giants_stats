@@ -24,7 +24,7 @@ And of course, if you find any bugs or issues with the program, please let me kn
 
 So with that out of the way, let's dive into the code and see what kind of baseball stats we can scrape up!
 
-This code is a Go program that prompts the user to enter a Major League Baseball team's abbreviation (e.g. SF for San Francisco Giants), then uses web scraping techniques to fetch and parse the team's 2022 season batting statistics from Baseball Reference. The program then outputs the table headers and the team's stats for the 2022 season to the console.
+This code is a Go program that prompts the user to enter a Major League Baseball team's abbreviation (e.g. SF for San Francisco Giants), then uses web scraping techniques to fetch and parse the team's season's batting statistics from Baseball Reference. The program then outputs the table headers and the team's stats for the season to the console.
 
 Let's take a closer look at how the code works:
 
