@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseball-reference-predictor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baseball-reference-predictor
+  template:
+    metadata:
+      labels:
+        app: baseball-reference-predictor
+    spec:
+      containers:
+      - name: baseball-reference-predictor
+        image: <your-docker-registry>/baseball-reference-predictor:latest
+        ports:
+        - containerPort: 80
+        stdin: true
+        tty: true
