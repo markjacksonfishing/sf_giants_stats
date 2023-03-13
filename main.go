@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 	"gonum.org/v1/gonum/mat"
@@ -48,30 +49,7 @@ func run(input io.Reader, output io.Writer) {
 		return
 	}
 
-	headers := make([]string, 0)
-	var data [][]float64
-	table.Find("thead tr th, tbody tr:not(.thead)").Each(func(i int, row *goquery.Selection) {
-		cells := make([]string, 0)
-		row.Find("th, td").Each(func(j int, cell *goquery.Selection) {
-			cells = append(cells, strings.TrimSpace(cell.Text()))
-		})
-		if len(cells) > 0 {
-			if i == 0 {
-				headers = cells[1:]
-			} else {
-				vals := make([]float64, len(cells)-1)
-				for k, v := range cells[1:] {
-					if f, err := strconv.ParseFloat(v, 64); err == nil {
-						vals[k] = f
-					} else {
-						// Skip non-numeric values
-						continue
-					}
-				}
-				data = append(data, vals)
-			}
-		}
-	})
+	headers, data := extractData(table)
 
 	// Check that the data slice is not empty
 	if len(data) == 0 {
@@ -80,50 +58,90 @@ func run(input io.Reader, output io.Writer) {
 	}
 
 	// Create a dense matrix from the data slice
-	X := mat.NewDense(len(data), len(headers)-1, nil)
-	Y := mat.NewVecDense(len(data), nil)
-	for i, row := range data {
-		if len(row) != len(headers) {
-			log.Fatalf("Error parsing data: row %d has length %d instead of %d", i, len(row), len(headers))
-		}
-		for j, val := range row[1:] {
-			X.Set(i, j, val)
-		}
-		Y.SetVec(i, row[0])
+	if len(headers) < 2 {
+		fmt.Fprintln(output, "Not enough headers found in HTML")
+		return
 	}
+
+	X, Y := createMatrix(headers, data)
 
 	// Compute the means of X and Y
-	meanX := mat.Sum(X.ColView(0)) / float64(X.RawMatrix().Rows)
-	meanY := mat.Sum(Y) / float64(Y.Len())
+	meanX, meanY := computeMeans(X, Y)
 
 	// Compute the variances and covariance of X and Y
-	varX := 0.0
-	varY := 0.0
-	covXY := 0.0
-	for i := 0; i < X.RawMatrix().Rows; i++ {
-		x := X.At(i, 0)
-		y := Y.AtVec(i)
-		devX := x - meanX
-		devY := y - meanY
-		varX += devX * devX
-		varY += devY * devY
-		covXY += devX * devY
-	}
-	varX /= float64(X.RawMatrix().Rows)
-	varY /= float64(Y.Len())
-	covXY /= float64(X.RawMatrix().Rows)
+	varX, varY, covXY := computeVariancesAndCovariance(X, Y, meanX, meanY)
 
 	// Compute the regression coefficients
-	beta := covXY / varX
-	alpha := meanY - beta*meanX
+	beta, alpha := computeRegressionCoefficients(varX, covXY, meanX, meanY)
 
 	// Use the regression coefficients to predict the team's wins
-	wins := 0.0
-	for i := 0; i < len(headers)-1; i++ {
-		wins += beta * X.At(0, i)
-	}
-	wins += alpha
+	wins := predictWins(headers, beta, alpha)
 
 	// Print the predicted wins for the upcoming season
 	fmt.Fprintf(output, "\nPredicted wins for the upcoming season: %.2f\n", wins)
+}
+
+func extractData(table *goquery.Selection) ([]string, [][]float64) {
+	headers := make([]string, 0)
+	data := make([][]float64, 0)
+
+	table.Find("thead tr th").Each(func(i int, header *goquery.Selection) {
+		headers = append(headers, strings.TrimSpace(header.Text()))
+	})
+
+	var wg sync.WaitGroup
+	table.Find("tbody tr").Each(func(i int, row *goquery.Selection) {
+		wg.Add(1)
+		go func(row *goquery.Selection) {
+			defer wg.Done()
+			vals := make([]float64, len(headers))
+			row.Find("td").Each(func(j int, cell *goquery.Selection) {
+				if j == 0 {
+					if f, err := strconv.ParseFloat(strings.TrimSpace(cell.Text()), 64); err == nil {
+						vals[0] = f
+					}
+				} else {
+					if f, err := strconv.ParseFloat(strings.TrimSpace(cell.Text()), 64); err == nil {
+						vals[j] = f
+					}
+				}
+			})
+			data = append(data, vals)
+		}(row)
+	})
+	wg.Wait()
+
+	return headers, data
+}
+
+func createMatrix(headers []string, data [][]float64) (*mat.Dense, *mat.Dense) {
+	X := mat.NewDense(len(data), 1, nil)
+	Y := mat.NewDense(len(data), 1, nil)
+
+	for i, row := range data {
+		for j, val := range row {
+			if headers[j] == "W" {
+				Y.Set(i, 0, val)
+			} else {
+				X.Set(i, 0, val)
+			}
+		}
+	}
+
+	return X, Y
+}
+
+func computeMeans(X, Y mat.Matrix) (float64, float64) {
+	var meanX, meanY float64
+
+	r, _ := X.Dims()
+	for i := 0; i < r; i++ {
+		meanX += X.At(i, 0)
+		meanY += Y.At(i, 0)
+	}
+
+	meanX /= float64(r)
+	meanY /= float64(r)
+
+	return meanX, meanY
 }
