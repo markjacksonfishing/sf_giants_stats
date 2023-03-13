@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -69,7 +70,7 @@ func run(input io.Reader, output io.Writer) {
 	meanX, meanY := computeMeans(X, Y)
 
 	// Compute the variances and covariance of X and Y
-	varX, varY, covXY := computeVariancesAndCovariance(X, Y, meanX, meanY)
+	varX, covXY := computeVariancesAndCovariance(X, Y, meanX, meanY)
 
 	// Compute the regression coefficients
 	beta, alpha := computeRegressionCoefficients(varX, covXY, meanX, meanY)
@@ -97,13 +98,12 @@ func extractData(table *goquery.Selection) ([]string, [][]float64) {
 			vals := make([]float64, len(headers))
 			row.Find("td").Each(func(j int, cell *goquery.Selection) {
 				if j == 0 {
-					if f, err := strconv.ParseFloat(strings.TrimSpace(cell.Text()), 64); err == nil {
-						vals[0] = f
+					if cell.HasClass("left") {
+						vals[j] = 1
 					}
 				} else {
-					if f, err := strconv.ParseFloat(strings.TrimSpace(cell.Text()), 64); err == nil {
-						vals[j] = f
-					}
+					val, _ := strconv.ParseFloat(strings.TrimSpace(cell.Text()), 64)
+					vals[j] = val
 				}
 			})
 			data = append(data, vals)
@@ -115,15 +115,16 @@ func extractData(table *goquery.Selection) ([]string, [][]float64) {
 }
 
 func createMatrix(headers []string, data [][]float64) (*mat.Dense, *mat.Dense) {
-	X := mat.NewDense(len(data), 1, nil)
+	// Create a dense matrix from the data slice
+	X := mat.NewDense(len(data), len(headers)-1, nil)
 	Y := mat.NewDense(len(data), 1, nil)
 
 	for i, row := range data {
 		for j, val := range row {
-			if headers[j] == "W" {
+			if j == 0 {
 				Y.Set(i, 0, val)
 			} else {
-				X.Set(i, 0, val)
+				X.Set(i, j-1, val)
 			}
 		}
 	}
@@ -132,16 +133,52 @@ func createMatrix(headers []string, data [][]float64) (*mat.Dense, *mat.Dense) {
 }
 
 func computeMeans(X, Y mat.Matrix) (float64, float64) {
-	var meanX, meanY float64
+	// Compute the means of X and Y
+	rows, _ := X.Dims()
+	meanX := mat.Sum(X) / float64(rows)
+	meanY := mat.Sum(Y) / float64(rows)
+
+	return meanX, meanY
+}
+
+func computeVariancesAndCovariance(X mat.Matrix, Y mat.Matrix, meanX float64, meanY float64) (float64, float64) {
+	var varX, covXY float64
 
 	r, _ := X.Dims()
 	for i := 0; i < r; i++ {
-		meanX += X.At(i, 0)
-		meanY += Y.At(i, 0)
+		varX += math.Pow(X.At(i, 0)-meanX, 2)
+		covXY += (X.At(i, 0) - meanX) * (Y.At(i, 0) - meanY)
 	}
 
-	meanX /= float64(r)
-	meanY /= float64(r)
+	varX /= float64(r)
+	covXY /= float64(r)
 
-	return meanX, meanY
+	return varX, covXY
+}
+
+func computeRegressionCoefficients(varX, covXY, meanX, meanY float64) (float64, float64) {
+	// Compute the regression coefficients
+	beta := covXY / varX
+	alpha := meanY - beta*meanX
+
+	return beta, alpha
+}
+
+func predictWins(headers []string, beta, alpha float64) float64 {
+	// Use the regression coefficients to predict the team's wins
+	wins := alpha
+
+	for i, header := range headers {
+		if i == 0 {
+			continue
+		}
+		fmt.Printf("Enter the team's %s: ", header)
+		reader := bufio.NewReader(os.Stdin)
+		val, _ := reader.ReadString('\n')
+		val = strings.TrimSpace(val)
+		v, _ := strconv.ParseFloat(val, 64)
+		wins += beta * v
+	}
+
+	return wins
 }
