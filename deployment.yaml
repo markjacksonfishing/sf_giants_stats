@@ -16,6 +16,6 @@ spec:
       - name: baseball-reference-predictor
         image: <your-docker-registry>/baseball-reference-predictor:latest
         ports:
-        - containerPort: 80
+        - containerPort: 3000
         stdin: true
         tty: true
