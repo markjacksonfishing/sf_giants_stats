@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/openai/openai-go/v1"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -172,6 +174,9 @@ func predictWins(headers []string, beta, alpha float64) float64 {
 		if i == 0 {
 			continue
 		}
+		if header == "Year" {
+			continue
+		}
 		fmt.Printf("Enter the team's %s: ", header)
 		reader := bufio.NewReader(os.Stdin)
 		val, _ := reader.ReadString('\n')
@@ -180,5 +185,28 @@ func predictWins(headers []string, beta, alpha float64) float64 {
 		wins += beta * v
 	}
 
-	return wins
+	// Use ChatGPT-3 to generate a more accurate prediction
+	client, err := openai.New("<your-api-key>")
+	if err != nil {
+		log.Fatalf("Error creating OpenAI client: %v", err)
+	}
+
+	resp, err := client.Completions.Create(context.Background(), &openai.CompletionRequest{
+		Model: "text-davinci-002",
+		Prompt: fmt.Sprintf("Predict the number of wins for the %s based on the following stats:\n%s",
+			headers[0], strings.Join(headers[1:], "\n")),
+		MaxTokens:   100,
+		Temperature: 0.5,
+	})
+	if err != nil {
+		log.Fatalf("Error making OpenAI API request: %v", err)
+	}
+
+	winsGPT, err := strconv.ParseFloat(strings.TrimSpace(resp.Choices[0].Text), 64)
+	if err != nil {
+		log.Fatalf("Error parsing GPT-3 prediction: %v", err)
+	}
+
+	// Use the average of the two predictions
+	return (wins + winsGPT) / 2
 }
