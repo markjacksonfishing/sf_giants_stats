@@ -2,7 +2,7 @@
 
 Hello there, fellow baseball fans! Are you ready to hear all about my love for the San Francisco Giants?
 
-The Giants are a team with a rich history, devoted fans, and a winning spirit. As a software factory chief engineer at Booz Allen Hamilton, I appreciate the dedication and precision that the Giants bring to the field.
+The Giants are a team with a rich history, devoted fans, and a winning spirit. I appreciate the dedication and precision that the Giants bring to the field.
 
 And let's not forget about the Giants' incredible fan base. There's nothing quite like being surrounded by thousands of fellow Giants fans, all chanting and cheering in unison. It's enough to give anyone goosebumps.
 
