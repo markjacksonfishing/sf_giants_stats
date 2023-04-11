@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseball-reference-predictor
+  labels:
+    app: baseball-reference-predictor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baseball-reference-predictor
+  template:
+    metadata:
+      labels:
+        app: baseball-reference-predictor
+    spec:
+      containers:
+      - name: baseball-reference-predictor
+        image: <your-docker-registry>/baseball-reference-predictor:latest
+        ports:
+        - containerPort: 3000
+        stdin: true
+        tty: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: istio-certs
+          mountPath: /etc/certs
+          readOnly: true
+      volumes:
+      - name: istio-certs
+        secret:
+          secretName: istio.default
