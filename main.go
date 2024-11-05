@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -14,7 +17,6 @@ import (
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/openai/openai-go/v1"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -185,28 +187,64 @@ func predictWins(headers []string, beta, alpha float64) float64 {
 		wins += beta * v
 	}
 
-	// Use ChatGPT-3 to generate a more accurate prediction
-	client, err := openai.New("<your-api-key>")
-	if err != nil {
-		log.Fatalf("Error creating OpenAI client: %v", err)
-	}
-
-	resp, err := client.Completions.Create(context.Background(), &openai.CompletionRequest{
-		Model: "text-davinci-002",
-		Prompt: fmt.Sprintf("Predict the number of wins for the %s based on the following stats:\n%s",
-			headers[0], strings.Join(headers[1:], "\n")),
-		MaxTokens:   100,
-		Temperature: 0.5,
-	})
-	if err != nil {
-		log.Fatalf("Error making OpenAI API request: %v", err)
-	}
-
-	winsGPT, err := strconv.ParseFloat(strings.TrimSpace(resp.Choices[0].Text), 64)
-	if err != nil {
-		log.Fatalf("Error parsing GPT-3 prediction: %v", err)
-	}
+	// Use raw HTTP request to OpenAI API for prediction
+	winsGPT := makeOpenAIPrediction(headers)
 
 	// Use the average of the two predictions
 	return (wins + winsGPT) / 2
+}
+
+// makeOpenAIPrediction makes a prediction by calling the OpenAI API directly
+func makeOpenAIPrediction(headers []string) float64 {
+	apiURL := "https://api.openai.com/v1/completions"
+	apiKey := "<your-api-key>" // Replace with your actual API key
+
+	// Construct the request payload
+	payload := map[string]interface{}{
+		"model":       "text-davinci-002",
+		"prompt":      fmt.Sprintf("Predict the number of wins for the %s based on the following stats:\n%s", headers[0], strings.Join(headers[1:], "\n")),
+		"max_tokens":  100,
+		"temperature": 0.5,
+	}
+	payloadBytes, _ := json.Marshal(payload)
+
+	// Create the request
+	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		log.Fatalf("Error creating OpenAI request: %v", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	// Execute the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("Error making OpenAI API request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading OpenAI response: %v", err)
+	}
+
+	// Parse the response JSON
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Fatalf("Error parsing OpenAI response JSON: %v", err)
+	}
+
+	// Extract the generated text and parse it as a float
+	choices := result["choices"].([]interface{})
+	text := choices[0].(map[string]interface{})["text"].(string)
+	winsGPT, err := strconv.ParseFloat(strings.TrimSpace(text), 64)
+	if err != nil {
+		log.Fatalf("Error parsing OpenAI prediction: %v", err)
+	}
+
+	return winsGPT
 }
