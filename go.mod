@@ -8,6 +8,6 @@ require github.com/PuerkitoBio/goquery v1.8.1
 
 require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	gonum.org/v1/gonum v0.12.0
 )
